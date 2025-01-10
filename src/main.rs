@@ -14,7 +14,6 @@ pub fn window_conf() -> Conf {
         icon: None,
         window_width: GAME_WIDTH as i32,
         window_height: GAME_HEIGHT as i32,
-        window_resizable: false,
         ..Default::default()
     }
 }
@@ -22,10 +21,10 @@ pub fn window_conf() -> Conf {
 #[macroquad::main(window_conf)]
 async fn main() {
     let mut camera = Camera2D {
-        zoom: vec2(2. / GAME_WIDTH, 2. / GAME_HEIGHT),
-        target: vec2((GAME_WIDTH * 0.5).floor(), (GAME_HEIGHT * 0.5).floor()),
+        zoom: vec2(2. / screen_width(), 2. / screen_height()),
         ..Default::default()
     };
+    let mut zoomer = Vec2::ZERO;
 
     let mut grid = [0.0; GRID_SIZE];
 
@@ -33,71 +32,92 @@ async fn main() {
         *item += num as f32 / GRID_SIZE as f32;
     }
 
-    let pos_x = GAME_WIDTH / 2. - ((COLUMN as f32 * TEXTURE_SIZE) / 2.);
-    let pos_y = GAME_HEIGHT / 2. - ((ROW as f32 * TEXTURE_SIZE) / 2.);
-
     loop {
-        for (num, item) in grid.iter_mut().enumerate() {
-            *item += 0.0001;
+        for item in grid.iter_mut() {
+            *item += 0.2 * get_frame_time();
             if *item > 1.0 {
                 *item = 0.0;
             }
         }
 
-        // ! controller
-        if mouse_wheel().1 < 0. && TEXTURE_SIZE > 4. {
-            camera.zoom += Vec2::new(0.1 / GAME_WIDTH, 0.1 / GAME_HEIGHT)
-        } else if mouse_wheel().1 > 0. {
-            camera.zoom -= Vec2::new(0.1 / GAME_WIDTH, 0.1 / GAME_HEIGHT)
-        }
-
-        if camera.zoom.x < 0. {
-            camera.zoom += Vec2::new(0.1 / GAME_WIDTH, 0.1 / GAME_HEIGHT)
-        }
-
-        if is_mouse_button_down(MouseButton::Left) {
-            let mouse_pos = mouse_delta_position();
-
-            camera.offset.x -= mouse_pos.x;
-            camera.offset.y += mouse_pos.y;
-        }
-
-        if is_key_pressed(KeyCode::Space) {
-            camera.offset = Vec2::ZERO;
-            camera.zoom = Vec2::new(2. / GAME_WIDTH, 2. / GAME_HEIGHT);
-        }
-
-        // ! ui
-        yakui_macroquad::ui(|_| {
-            yakui::center(|| {
-                yakui::colored_box_container(yakui::Color::REBECCA_PURPLE, || {
-                    yakui::pad(yakui::widgets::Pad::all(4.0), || {
-                        yakui::text(16.0, "hello, world!");
-                    });
-                });
-            });
-        });
+        camera_fixer(&mut camera, &mut zoomer);
 
         // ! draw
         set_camera(&camera);
 
         clear_background(BLACK);
 
+        let pos_x = (COLUMN as f32 * TEXTURE_SIZE) / 2.;
+        let pos_y = (ROW as f32 * TEXTURE_SIZE) / 2.;
+
         for (index, cell) in grid.iter().enumerate() {
             let x = (index % COLUMN) as f32 * TEXTURE_SIZE;
             let y = (index / COLUMN) as f32 * TEXTURE_SIZE;
 
             draw_rectangle(
-                pos_x + x,
-                pos_y + y,
+                x - pos_x,
+                y - pos_y,
                 TEXTURE_SIZE,
                 TEXTURE_SIZE,
                 hsl_to_rgb(*cell, 1.0, 0.5),
             );
         }
 
-        yakui_macroquad::draw();
-
         next_frame().await;
     }
 }
+
+fn camera_fixer(camera: &mut Camera2D, zoomer: &mut Vec2) {
+    // ! window res
+    camera.zoom = vec2(
+        2. / screen_width() + zoomer.x / screen_width(),
+        2. / screen_height() + zoomer.y / screen_height(),
+    );
+    camera.target = Vec2::ZERO;
+
+    if screen_width() < 320. {
+        request_new_screen_size(320., screen_height());
+    }
+
+    if screen_height() < 240. {
+        request_new_screen_size(screen_width(), 240.);
+    }
+
+    // ! controller
+    if mouse_wheel().1 > 0. {
+        *zoomer += 0.2
+    } else if mouse_wheel().1 < 0. && zoomer.x > -2. {
+        *zoomer -= 0.2;
+    }
+
+    if camera.zoom.x < 0. {
+        camera.zoom += Vec2::new(0.1 / screen_width(), 0.1 / screen_height())
+    }
+
+    if is_mouse_button_down(MouseButton::Left) {
+        let mouse_pos = mouse_delta_position();
+
+        camera.offset.x -= mouse_pos.x;
+        camera.offset.y += mouse_pos.y;
+    }
+
+    if is_key_pressed(KeyCode::Space) {
+        camera.offset = Vec2::ZERO;
+        camera.zoom = Vec2::new(2. / GAME_WIDTH, 2. / GAME_HEIGHT);
+    }
+}
+
+/*
+// ui things
+yakui_macroquad::ui(|_| {
+    yakui::center(|| {
+        yakui::colored_box_container(yakui::Color::REBECCA_PURPLE, || {
+            yakui::pad(yakui::widgets::Pad::all(4.0), || {
+                yakui::text(16.0, "hello, world!");
+            });
+        });
+    });
+});
+
+yakui_macroquad::draw();
+*/
