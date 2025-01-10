@@ -1,0 +1,9 @@
+[package]
+name = "freedom-grid"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+macroquad = "0.4.13"
+yakui-macroquad = "0.4.0"
+yakui = "0.3.0"
