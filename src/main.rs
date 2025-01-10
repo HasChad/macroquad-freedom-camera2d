@@ -103,7 +103,7 @@ fn camera_fixer(camera: &mut Camera2D, zoomer: &mut Vec2) {
 
     if is_key_pressed(KeyCode::Space) {
         camera.offset = Vec2::ZERO;
-        camera.zoom = Vec2::new(2. / GAME_WIDTH, 2. / GAME_HEIGHT);
+        *zoomer = Vec2::ZERO;
     }
 }
 
