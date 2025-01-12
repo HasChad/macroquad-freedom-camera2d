@@ -1,8 +1,5 @@
 use macroquad::{color::hsl_to_rgb, prelude::*};
-use yakui_macroquad::*;
 
-pub const GAME_WIDTH: f32 = 640.0;
-pub const GAME_HEIGHT: f32 = 480.0;
 const COLUMN: usize = 10;
 const ROW: usize = 10;
 const GRID_SIZE: usize = COLUMN * ROW;
@@ -12,8 +9,8 @@ pub fn window_conf() -> Conf {
     Conf {
         window_title: "Freedom Grid".into(),
         icon: None,
-        window_width: GAME_WIDTH as i32,
-        window_height: GAME_HEIGHT as i32,
+        window_width: 640,
+        window_height: 480,
         ..Default::default()
     }
 }
@@ -75,6 +72,7 @@ fn camera_fixer(camera: &mut Camera2D, zoomer: &mut Vec2) {
     );
     camera.target = Vec2::ZERO;
 
+    // ! set min window heigh and width
     if screen_width() < 320. {
         request_new_screen_size(320., screen_height());
     }
@@ -83,10 +81,10 @@ fn camera_fixer(camera: &mut Camera2D, zoomer: &mut Vec2) {
         request_new_screen_size(screen_width(), 240.);
     }
 
-    // ! controller
+    // ! zoom
     if mouse_wheel().1 > 0. {
         *zoomer += 0.2
-    } else if mouse_wheel().1 < 0. && zoomer.x > -2. {
+    } else if mouse_wheel().1 < 0. && zoomer.x > -1. {
         *zoomer -= 0.2;
     }
 
@@ -94,6 +92,7 @@ fn camera_fixer(camera: &mut Camera2D, zoomer: &mut Vec2) {
         camera.zoom += Vec2::new(0.1 / screen_width(), 0.1 / screen_height())
     }
 
+    // ! move camera
     if is_mouse_button_down(MouseButton::Left) {
         let mouse_pos = mouse_delta_position();
 
@@ -101,23 +100,9 @@ fn camera_fixer(camera: &mut Camera2D, zoomer: &mut Vec2) {
         camera.offset.y += mouse_pos.y;
     }
 
+    // ! reset position and zoom
     if is_key_pressed(KeyCode::Space) {
         camera.offset = Vec2::ZERO;
         *zoomer = Vec2::ZERO;
     }
 }
-
-/*
-// ui things
-yakui_macroquad::ui(|_| {
-    yakui::center(|| {
-        yakui::colored_box_container(yakui::Color::REBECCA_PURPLE, || {
-            yakui::pad(yakui::widgets::Pad::all(4.0), || {
-                yakui::text(16.0, "hello, world!");
-            });
-        });
-    });
-});
-
-yakui_macroquad::draw();
-*/
