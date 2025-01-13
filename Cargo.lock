@@ -95,13 +95,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "freedom-grid"
-version = "0.1.0"
-dependencies = [
- "macroquad",
-]
-
-[[package]]
 name = "glam"
 version = "0.27.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -148,6 +141,13 @@ dependencies = [
  "miniquad",
  "quad-rand",
  "slotmap",
+]
+
+[[package]]
+name = "macroquad-freedom-camera2d"
+version = "0.1.0"
+dependencies = [
+ "macroquad",
 ]
 
 [[package]]
