@@ -40,6 +40,8 @@ async fn main() {
             ORANGE,
         );
 
+        draw_triangle(vec2(50.0, -50.0), vec2(25.0, 0.0), vec2(75.0, 0.0), BLUE);
+
         next_frame().await;
     }
 }
