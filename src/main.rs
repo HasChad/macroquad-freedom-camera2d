@@ -1,13 +1,8 @@
-use macroquad::{color::hsl_to_rgb, prelude::*};
-
-const COLUMN: usize = 10;
-const ROW: usize = 10;
-const GRID_SIZE: usize = COLUMN * ROW;
-const TEXTURE_SIZE: f32 = 32.;
+use macroquad::prelude::*;
 
 pub fn window_conf() -> Conf {
     Conf {
-        window_title: "Freedom Grid".into(),
+        window_title: "Macroquad Freedom Camera2D".into(),
         icon: None,
         window_width: 640,
         window_height: 480,
@@ -17,26 +12,17 @@ pub fn window_conf() -> Conf {
 
 #[macroquad::main(window_conf)]
 async fn main() {
+    // setup camera variable so we can use it while the app is running
     let mut camera = Camera2D {
         zoom: vec2(2. / screen_width(), 2. / screen_height()),
         ..Default::default()
     };
+
+    // variable for zooming in and out
+    // you can remove this if you dont plan to use camera zoom
     let mut zoomer = Vec2::ZERO;
 
-    let mut grid = [0.0; GRID_SIZE];
-
-    for (num, item) in grid.iter_mut().enumerate() {
-        *item += num as f32 / GRID_SIZE as f32;
-    }
-
     loop {
-        for item in grid.iter_mut() {
-            *item += 0.2 * get_frame_time();
-            if *item > 1.0 {
-                *item = 0.0;
-            }
-        }
-
         camera_fixer(&mut camera, &mut zoomer);
 
         // ! draw
@@ -44,35 +30,28 @@ async fn main() {
 
         clear_background(BLACK);
 
-        let pos_x = (COLUMN as f32 * TEXTURE_SIZE) / 2.;
-        let pos_y = (ROW as f32 * TEXTURE_SIZE) / 2.;
+        let texture_size = 128.0;
 
-        for (index, cell) in grid.iter().enumerate() {
-            let x = (index % COLUMN) as f32 * TEXTURE_SIZE;
-            let y = (index / COLUMN) as f32 * TEXTURE_SIZE;
-
-            draw_rectangle(
-                x - pos_x,
-                y - pos_y,
-                TEXTURE_SIZE,
-                TEXTURE_SIZE,
-                hsl_to_rgb(*cell, 1.0, 0.5),
-            );
-        }
+        draw_rectangle(
+            texture_size / -2.,
+            texture_size / -2.,
+            texture_size,
+            texture_size,
+            ORANGE,
+        );
 
         next_frame().await;
     }
 }
 
 fn camera_fixer(camera: &mut Camera2D, zoomer: &mut Vec2) {
-    // ! window res
+    // disable stretch when window size is changed
     camera.zoom = vec2(
         2. / screen_width() + zoomer.x / screen_width(),
         2. / screen_height() + zoomer.y / screen_height(),
     );
-    camera.target = Vec2::ZERO;
 
-    // ! set min window heigh and width
+    // set min window heigh and width
     if screen_width() < 320. {
         request_new_screen_size(320., screen_height());
     }
@@ -81,26 +60,25 @@ fn camera_fixer(camera: &mut Camera2D, zoomer: &mut Vec2) {
         request_new_screen_size(screen_width(), 240.);
     }
 
-    // ! zoom
+    // zoom in
     if mouse_wheel().1 > 0. {
         *zoomer += 0.2
+
+    // zoom out
     } else if mouse_wheel().1 < 0. && zoomer.x > -1. {
         *zoomer -= 0.2;
     }
 
-    if camera.zoom.x < 0. {
-        camera.zoom += Vec2::new(0.1 / screen_width(), 0.1 / screen_height())
-    }
-
-    // ! move camera
+    // move camera
     if is_mouse_button_down(MouseButton::Left) {
         let mouse_pos = mouse_delta_position();
 
+        // you can change the add and sub assigments if you plan to use different camera movement
         camera.offset.x -= mouse_pos.x;
         camera.offset.y += mouse_pos.y;
     }
 
-    // ! reset position and zoom
+    // reset position and zoom
     if is_key_pressed(KeyCode::Space) {
         camera.offset = Vec2::ZERO;
         *zoomer = Vec2::ZERO;
