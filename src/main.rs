@@ -1,6 +1,7 @@
 use macroquad::prelude::*;
 
 const ZOOM_DEFAULT: f32 = 2.0; // change this if you want different starting zoom level
+const ZOOM_VALUE: f32 = 0.2; // change this if you want to zoom in/out faster or slower
 
 pub fn window_conf() -> Conf {
     Conf {
@@ -66,17 +67,17 @@ fn camera_fixer(camera: &mut Camera2D, zoomer: &mut f32) {
         // way to always get precise .2 accuracy for floating point operation
         *zoomer = (*zoomer * 10.).round() / 10.;
 
-        *zoomer += 0.2;
+        *zoomer += ZOOM_VALUE;
 
     // zoom out
-    } else if mouse_wheel().1 < 0. && *zoomer > 0.2 {
+    } else if mouse_wheel().1 < 0. && *zoomer > ZOOM_VALUE {
         // way to always get precise .2 accuracy for floating point operation
         *zoomer = (*zoomer * 10.).round() / 10.;
 
-        *zoomer -= 0.2;
+        *zoomer -= ZOOM_VALUE;
 
-        if *zoomer < 0.2 {
-            *zoomer = 0.2;
+        if *zoomer < ZOOM_VALUE {
+            *zoomer = ZOOM_VALUE;
         }
     }
 
